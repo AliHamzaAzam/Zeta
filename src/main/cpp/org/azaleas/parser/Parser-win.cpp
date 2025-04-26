@@ -82,7 +82,6 @@ private:
 
 // Class to store and process Context-Free Grammar (CFG)
 class Grammar {
-public:
     // Map to store the original cfg
     map<string, vector<string>> cfg;
 
@@ -97,7 +96,11 @@ public:
     // map to hold the parsing table
     map<pair<string, string>, string> parsingTable;
 
+    // Start Symbol
+    string startSymbol;
 
+
+public:
     // Default constructor
     Grammar() = default;
 
@@ -112,6 +115,7 @@ public:
             return 0;
         }
 
+        bool is_first = true;
         // Read each line of the file
         while (getline(file, line)) {
             // Read one line of the cfg (a production rule) into a string stream
@@ -133,6 +137,11 @@ public:
             // Read the rhs of the cfg into a string stream
             istringstream rhsStream(rhs);
             string production;
+
+            if (is_first) {
+                startSymbol = lhs; // Set the start symbol
+                is_first = false;
+            }
 
             // Split productions by '|' and store them in the map
             while (getline(rhsStream, production, '|')) { cfg[lhs].push_back(production); }
@@ -564,23 +573,8 @@ public:
 
         // Rule 1: Add $ to Follow of the designated start symbol
         // *** MODIFIED: Explicitly use "P" as the start symbol for this grammar ***
-        string startSymbol = "P";
-        if (nonTerminals.count(startSymbol)) { // Check if P exists
-            follow[startSymbol].insert("$");
-        }
-        else {
-            // Fallback or error if P is not found (should not happen with the given grammar)
-            string firstKey = cfg.begin()->first;
-            if (!firstKey.empty()) {
-                follow[firstKey].insert("$");
-                cerr << "Warning: Explicit start symbol 'P' not found. Using first rule's LHS: '" << firstKey << "' as start symbol." << endl;
-            }
-            else {
-                cerr << "Error: Cannot determine start symbol." << endl;
-                return 0; // Cannot proceed without a start symbol
-            }
-        }
-
+        follow[startSymbol].insert("$");
+        cout << "Start symbol: " << startSymbol << endl;
 
         bool changed = true;
         // iterate until no changes in an iteration
@@ -868,7 +862,7 @@ public:
 };
 
 int main() {
-    string fileName = "cfg1.txt";
+    string fileName = "cfg.txt";
     Grammar cfg;
 
     // Redirect cout and cerr to both console and file

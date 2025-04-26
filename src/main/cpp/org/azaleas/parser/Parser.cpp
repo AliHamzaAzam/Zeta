@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <string>
-#include <sstream>
 
 
 using namespace std;
@@ -32,7 +31,7 @@ vector<string> tokenizeProduction(const string& prod) {
 
 // Helper function to join tokens back into a string
 string joinTokens(const vector<string>& tokens, size_t start = 0, size_t end = string::npos) {
-    string result = "";
+    string result;
     if (end == string::npos) {
         end = tokens.size();
     }
@@ -80,7 +79,6 @@ private:
 
 // Class to store and process Context-Free Grammar (CFG)
 class Grammar {
-public:
     // Map to store the original cfg
     map<string, vector<string>> cfg;
 
@@ -95,7 +93,11 @@ public:
     // map to hold the parsing table
     map<pair<string, string>, string> parsingTable;
 
+    // Start Symbol
+    string startSymbol = "S"; // Default start symbol, can be changed
 
+
+public:
     // Default constructor
     Grammar() = default;
 
@@ -111,6 +113,7 @@ public:
         }
 
         // Read each line of the file
+        bool isFirst = true;
         while (getline(file, line)) {
             // Read one line of the cfg (a production rule) into a string stream
             istringstream iss(line);
@@ -131,6 +134,11 @@ public:
             // Read the rhs of the cfg into a string stream
             istringstream rhsStream(rhs);
             string production;
+
+            if (isFirst) {
+                startSymbol = lhs;
+                isFirst = false;
+            }
 
             // Split productions by '|' and store them in the map
             while (getline(rhsStream, production, '|')) { cfg[lhs].push_back(production); }
@@ -367,7 +375,7 @@ public:
             }
 
             // Add epsilon production for A'
-            newNonTerminalProds.push_back("ε");
+            newNonTerminalProds.emplace_back("ε");
 
             // Update the grammar
             new_cfg[lhs] = newLhsProds;
@@ -557,23 +565,8 @@ public:
         for (const string& nonTerm : nonTerminals) follow[nonTerm] = {};
 
         // Rule 1: Add $ to Follow of the designated start symbol
-        // *** MODIFIED: Explicitly use "P" as the start symbol for this grammar ***
-        string startSymbol = "P";
-        if (nonTerminals.count(startSymbol)) { // Check if P exists
-            follow[startSymbol].insert("$");
-        } else {
-             // Fallback or error if P is not found (should not happen with the given grammar)
-             string firstKey = cfg.begin()->first;
-             if (!firstKey.empty()) {
-                 follow[firstKey].insert("$");
-                 cerr << "Warning: Explicit start symbol 'P' not found. Using first rule's LHS: '" << firstKey << "' as start symbol." << endl;
-             } else {
-                 cerr << "Error: Cannot determine start symbol." << endl;
-                 return 0; // Cannot proceed without a start symbol
-             }
-        }
-
-
+        follow[startSymbol].insert("$");
+        cout << "Start Symbol: " << startSymbol << endl;
         bool changed = true;
         // iterate until no changes in an iteration
         while (changed) {
@@ -917,4 +910,3 @@ int main() {
 
     return 0;
 }
-
