@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the executable
 add_executable(Parser Parser.cpp)
 add_executable(Stack Stack.cpp)
+add_executable(ParserWindows Parser-win.cpp)
+add_executable(StackWindows Stack-win.cpp)
 
 # Include directories
 include_directories(src/main/cpp/org/azaleas/parser)
