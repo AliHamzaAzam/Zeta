@@ -1,4 +1,3 @@
-// NOTE: Do verify input filenames in main function before execution
 
 #include <stdio.h>
 #include <stdlib.h>

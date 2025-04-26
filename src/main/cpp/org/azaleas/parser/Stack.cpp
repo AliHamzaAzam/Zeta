@@ -1,10 +1,8 @@
 //
 // Created by Ali Hamza Azam on 25/04/2025.
 //
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -61,7 +59,7 @@ char* stack_pop(Stack *s) {
 
 // Peek at the top of the stack
 char* stack_peek(Stack *s) {
-    return (s->top >= 0) ? s->items[s->top] : NULL;
+    return (s->top >= 0) ? s->items[s->top] : nullptr;
 }
 
 // Load parsing table from a CSV file
@@ -97,8 +95,8 @@ void load_parsing_table(const char *filename) {
             header_read = true;
         } else {
             // Read data row
-            if (segments.size() < 1) continue; // Malformed row
-            std::string non_terminal = segments[0];
+            if (segments.empty()) continue; // Malformed row
+            const std::string& non_terminal = segments[0];
 
             for (size_t i = 1; i < segments.size(); ++i) {
                 if (i - 1 < terminals.size() && !segments[i].empty()) {
@@ -107,7 +105,7 @@ void load_parsing_table(const char *filename) {
                         exit(EXIT_FAILURE);
                     }
 
-                    std::string production_full = segments[i]; // e.g., " E → T E'"
+                    const std::string& production_full = segments[i]; // e.g., " E → T E'"
                     std::string production_rhs;
 
                     // Find the arrow '→' or '->'
@@ -188,23 +186,26 @@ const char* get_production(const char *nt, const char *term) {
             return parsing_table[i].production;
         }
     }
-    return NULL; // No entry found (error)
+    return nullptr; // No entry found (error)
 }
 
-// Parse a single input string
-void parse_input(const char *input, const char *start_symbol) {
+// Parse a single input string and add errors to the vector
+void parse_input(const char *input, const char *start_symbol, int line_num, std::vector<std::string>& errors) {
     Stack s;
     stack_init(&s, start_symbol);
     char input_copy[MAX_INPUT_LEN];
-    strcpy(input_copy, input);
-    char *token = strtok(input_copy, " "); // Initial tokenization
-    int step = 1;
-    bool error = false;
+    strncpy(input_copy, input, MAX_INPUT_LEN - 1); // Use strncpy for safety
+    input_copy[MAX_INPUT_LEN - 1] = '\0'; // Ensure null termination
 
-    printf("\nParsing: %s\n", input);
+    char* next_token = nullptr;
+    char* token = strtok_r(input_copy, " ", &next_token); // Initial tokenization
+    int step = 1;
+    bool error_on_line = false;
+
+    printf("\nParsing Line %d: '%s'\n", line_num, input);
     printf("-------------------------------\n");
 
-    while (stack_peek(&s) != NULL) {
+    while (stack_peek(&s) != nullptr && !error_on_line) { // Stop processing line on first error
         // Print current stack and input
         printf("Step %d:\n", step++);
         printf("Stack: ");
@@ -221,18 +222,24 @@ void parse_input(const char *input, const char *start_symbol) {
         if (strcmp(top, current_input) == 0) {
             if (strcmp(top, "$") == 0) { // Both stack top and input are $
                 printf("Action: Accept\n");
-                break; // Successful parse
+                break; // Successful parse for this line
             } else { // Matched a terminal
                 printf("Action: Match '%s'\n", token);
                 stack_pop(&s);
-                token = strtok(NULL, " "); // Get next token
+                token = strtok_r(nullptr, " ", &next_token); // Get next token using strtok_r
             }
         } else { // Top is a non-terminal, need to expand
             const char *prod = get_production(top, current_input);
             if (!prod) {
-                printf("Error: No production for %s on input '%s'\n", top, current_input);
-                error = true;
-                break;
+                // *** ERROR HANDLING: No production found ***
+                std::string error_msg = "Line " + std::to_string(line_num) +
+                                        ": Syntax Error: Unexpected token '" + current_input +
+                                        "' when expecting production for " + top;
+                // More specific error (requires grammar knowledge):
+                errors.push_back(error_msg);
+                error_on_line = true;
+                printf("Error: %s\n", error_msg.c_str()); // Print immediate error context
+                break; // Stop parsing this line
             }
             printf("Action: Expand %s -> %s\n", top, prod);
             stack_pop(&s);
@@ -252,59 +259,105 @@ void parse_input(const char *input, const char *start_symbol) {
                 for (int i = parts.size() - 1; i >= 0; i--) {
                     if (parts[i].length() >= MAX_SYMBOL_LEN) {
                         fprintf(stderr, "Error: Symbol '%s' in production '%s' too long (max %d)\n", parts[i].c_str(), prod, MAX_SYMBOL_LEN - 1);
-                        error = true;
+                        // This is a configuration error, maybe exit? For now, report and stop line.
+                        std::string error_msg = "Line " + std::to_string(line_num) +
+                                                ": Internal Error: Symbol '" + parts[i] + "' too long.";
+                        errors.push_back(error_msg);
+                        error_on_line = true;
                         break; // Break inner loop
                     }
                     stack_push(&s, parts[i].c_str());
                 }
-                if (error) break; // Break outer loop if symbol was too long
+                if (error_on_line) break; // Break outer loop if symbol was too long
             }
         }
         printf("\n"); // Add newline for better formatting
     }
 
-    // Final check after loop
-    if (!error && token != NULL && strcmp(stack_peek(&s), "$") == 0) {
-        // If stack is accepted ($) but there's still input left
-        printf("Error: Stack accepted but input remaining: %s\n", token);
-        error = true;
-    } else if (!error && strcmp(stack_peek(&s), "$") != 0) {
-        // If input is exhausted (token is NULL) but stack isn't $
-        printf("Error: Input exhausted but stack not empty. Top: %s\n", stack_peek(&s));
-        error = true;
+    // Final check after loop (only if no error occurred during parsing steps)
+    if (!error_on_line) {
+        const char* final_stack_top = stack_peek(&s);
+        if (final_stack_top && strcmp(final_stack_top, "$") == 0 && token != nullptr) {
+            // If stack is accepted ($) but there's still input left
+            std::string error_msg = "Line " + std::to_string(line_num) +
+                                    ": Syntax Error: Unexpected token '" + token + "' after end of expression";
+            errors.push_back(error_msg);
+            error_on_line = true;
+            printf("Error: %s\n", error_msg.c_str());
+        } else if (!(final_stack_top && strcmp(final_stack_top, "$") == 0) && token == nullptr) {
+            // If input is exhausted (token is NULL) but stack isn't accepted ($)
+            std::string error_msg = "Line " + std::to_string(line_num) +
+                                    ": Syntax Error: Unexpected end of input, expected more tokens" +
+                                    (final_stack_top ? " (Stack top: " + std::string(final_stack_top) + ")" : "");
+            // More specific: ": Syntax Error: Expected <token(s)> before end of input"
+            errors.push_back(error_msg);
+            error_on_line = true;
+            printf("Error: %s\n", error_msg.c_str());
+        } else if (!(final_stack_top && strcmp(final_stack_top, "$") == 0 && token == nullptr)) {
+            // Catch unexpected end states (should ideally not happen if logic above is correct)
+            std::string error_msg = "Line " + std::to_string(line_num) +
+                                    ": Parsing finished in an unexpected state.";
+            if (token != nullptr) error_msg += " Remaining input: " + std::string(token);
+            if (final_stack_top) error_msg += " Final stack top: " + std::string(final_stack_top);
+            errors.push_back(error_msg);
+            error_on_line = true;
+            printf("Error: %s\n", error_msg.c_str());
+        }
     }
 
-    if (error) {
-        printf("\nParsing failed with errors.\n");
-    } else if (strcmp(stack_peek(&s), "$") == 0 && token == NULL) {
-        // Ensure we accepted correctly (stack is $, input is consumed)
-        printf("\nParsing succeeded.\n");
-    } else {
-        // Catch unexpected end states
-        printf("\nParsing finished in an unexpected state.\n");
-        if (token != NULL) printf("Remaining input: %s\n", token);
-        printf("Final stack top: %s\n", stack_peek(&s));
+    if (error_on_line) {
+        printf("\nParsing failed for Line %d.\n", line_num);
+    } else if (stack_peek(&s) && strcmp(stack_peek(&s), "$") == 0 && token == nullptr) {
+        printf("\nParsing succeeded for Line %d.\n", line_num);
     }
     printf("-------------------------------\n");
 }
 
 int main() {
     // Use the CSV file generated by Parser.cpp (adjust path if needed)
-    load_parsing_table("ll1_parsing_table.csv"); 
+    // Ensure the path is correct relative to where the executable runs
+    // Using a direct path relative to the executable location is often safer.
+    load_parsing_table("ll1_parsing_table.csv");
+
+    // Same path consideration for input file
     FILE *input_file = fopen("input_strings.txt", "r");
     if (!input_file) {
-        perror("Error opening input file");
-        return EXIT_FAILURE;
-    }
-
-    char line[MAX_INPUT_LEN];
-    while (fgets(line, sizeof(line), input_file)) {
-        line[strcspn(line, "\n")] = '\0'; // Remove newline
-        if (strlen(line) > 0) {
-            parse_input(line, "P"); // Assuming start symbol is 'E'
+        perror("Error opening input file (input_strings.txt)");
+        input_file = fopen("../input_strings.txt", "r");
+        if (!input_file) {
+            perror("Error opening input file (../input_strings.txt)");
+            return EXIT_FAILURE;
         }
     }
 
+    std::vector<std::string> all_errors; // Vector to store all errors
+    char line[MAX_INPUT_LEN];
+    int line_num = 1; // Track line numbers
+
+    while (fgets(line, sizeof(line), input_file)) {
+        line[strcspn(line, "\n\r")] = '\0'; // Remove newline/carriage return
+        if (strlen(line) > 0) {
+            // Pass the vector by reference to collect errors
+            parse_input(line, "E", line_num, all_errors); // Assuming start symbol is 'E'
+        }
+        line_num++; // Increment line number for the next line
+    }
+
     fclose(input_file);
-    return EXIT_SUCCESS;
+
+    // Print all collected errors at the end
+    printf("\n--- Error Summary ---\n");
+    if (all_errors.empty()) {
+        printf("Parsing completed with 0 errors.\n");
+    } else {
+        for (const auto& err : all_errors) {
+            printf("%s\n", err.c_str());
+        }
+        // printf("Parsing continued after error recovery.\n");
+        printf("Parsing completed with %zu errors.\n", all_errors.size());
+    }
+    printf("---------------------\n");
+
+
+    return all_errors.empty() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
