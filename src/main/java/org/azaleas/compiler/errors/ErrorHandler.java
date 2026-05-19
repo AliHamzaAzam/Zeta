@@ -15,4 +15,12 @@ public class ErrorHandler {
             errors.forEach(System.out::println);
         }
     }
+
+    public boolean hasErrors() {
+        return !errors.isEmpty();
+    }
+
+    public List<String> getErrors() {
+        return new ArrayList<>(errors);
+    }
 }

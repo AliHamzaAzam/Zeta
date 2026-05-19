@@ -1,17 +1,17 @@
 package org.azaleas.compiler.symboltable;
 
-import org.azaleas.compiler.lexer.TokenType;
+import org.azaleas.compiler.semantic.ZetaType;
 
 import java.util.Objects;
 
 public class SymbolTableEntry {
     private String name;
-    private String type;
+    private ZetaType type;
     private Object value;
     private String scope;
     private boolean isConstant;
 
-    public SymbolTableEntry(String name, String type, Object value, String scope, boolean isConstant) {
+    public SymbolTableEntry(String name, ZetaType type, Object value, String scope, boolean isConstant) {
         this.name = name;
         this.type = type;
         this.value = value;
@@ -23,7 +23,7 @@ public class SymbolTableEntry {
         return name;
     }
 
-    public String getType() {
+    public ZetaType getType() {
         return type;
     }
 
@@ -47,21 +47,23 @@ public class SymbolTableEntry {
     public String toString() {
         return "SymbolTableEntry{" +
                 "name='" + name + '\'' +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", value=" + value +
                 ", scope=" + scope +
                 ", isConstant=" + isConstant +
                 '}';
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof SymbolTableEntry) {
             SymbolTableEntry entry = (SymbolTableEntry) obj;
-            return name.equals(entry.name) && type.equals(entry.type) && Objects.equals(scope, entry.scope) && isConstant == entry.isConstant;
+            return name.equals(entry.name) && type == entry.type && Objects.equals(scope, entry.scope) && isConstant == entry.isConstant;
         }
         return false;
     }
 
+    @Override
     public int hashCode() {
         return name.hashCode() + type.hashCode() + scope.hashCode() + (isConstant ? 1 : 0);
     }

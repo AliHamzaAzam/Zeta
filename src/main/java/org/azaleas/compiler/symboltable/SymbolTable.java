@@ -2,6 +2,7 @@ package org.azaleas.compiler.symboltable;
 
 import org.azaleas.compiler.lexer.Token;
 import org.azaleas.compiler.lexer.TokenType;
+import org.azaleas.compiler.semantic.ZetaType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.Optional;
 public class SymbolTable {
     private List<SymbolTableEntry> symbolTable = new ArrayList<>();
 
-    public void addEntry(String name, String type, Object value, String scope, boolean isConstant) {
+    public void addEntry(String name, ZetaType type, Object value, String scope, boolean isConstant) {
         this.symbolTable.add(new SymbolTableEntry(name, type, value, scope, isConstant));
     }
 
@@ -90,11 +91,24 @@ public class SymbolTable {
 
     private void addEntry(Token token, Token varName, Token varValue) {
         String name = varName.value();
-        String type = varValue.type().name();
+        ZetaType type = tokenTypeToZetaType(varValue.type());
         Object value = parseValue(varValue);
         String scope = token.value().equals("global") ? "global" : "local";
         boolean isConstant = true;
-        addEntry(name,type,value,scope,isConstant);
+        addEntry(name, type, value, scope, isConstant);
+    }
+
+    private static ZetaType tokenTypeToZetaType(TokenType tokenType) {
+        switch (tokenType) {
+            case INTEGER:
+                return ZetaType.INT;
+            case DECIMAL:
+                return ZetaType.DECIMAL;
+            case STRING_OR_CHAR:
+                return ZetaType.STRING;
+            default:
+                return ZetaType.UNKNOWN;
+        }
     }
 
 }

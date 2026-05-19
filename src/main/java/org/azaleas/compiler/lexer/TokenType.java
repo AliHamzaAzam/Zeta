@@ -11,6 +11,8 @@ public enum TokenType {
     DECIMAL,
     INTEGER,
     IDENTIFIER,
+    LEFT_PAREN,
+    RIGHT_PAREN,
     ERROR,
     EOF
 }
