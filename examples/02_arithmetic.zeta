@@ -1,0 +1,4 @@
+global pi is 3.14
+local radius is 5
+local area is pi * radius ^ 2
+tell {The area is } area

@@ -1,0 +1,41 @@
+# Build artifacts
+target/
+out/
+*.jar
+!target/Zeta-1.0-SNAPSHOT.jar
+dependency-reduced-pom.xml
+
+# IDE files (all IDEs)
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+nbproject/
+*.nbattrs
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+._*
+
+# Logs
+*.log
+
+# Test outputs
+surefire-reports/
+test-output/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# Project specific
+.sisyphus/
+myprogram.zeta

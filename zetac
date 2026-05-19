@@ -1,0 +1,2 @@
+#!/bin/bash
+java -jar target/Zeta-1.0-SNAPSHOT.jar "$@"

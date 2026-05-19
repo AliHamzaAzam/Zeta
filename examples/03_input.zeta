@@ -1,0 +1,7 @@
+local name is {Anonymous}
+local age is 0
+tell {What is your name?}
+ask name
+tell {How old are you?}
+ask age
+tell {Hello, } name {. You are } age { years old.}

@@ -1,0 +1,4 @@
+# Ignore everything in experiments except .gitignore
+# This keeps the directory structure but ignores all archived files
+*
+!.gitignore

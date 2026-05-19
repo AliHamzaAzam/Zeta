@@ -1,0 +1,11 @@
+local a is 2
+local b is 3
+local c is 4
+local expr1 is a + b * c
+local expr2 is (a + b) * c
+local expr3 is a ^ b ^ 2
+local expr4 is 10 / 3 + 10 % 3
+tell {a + b * c = } expr1
+tell {(a + b) * c = } expr2
+tell {a ^ b ^ 2 = } expr3
+tell {10 / 3 + 10 % 3 = } expr4

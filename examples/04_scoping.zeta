@@ -1,0 +1,6 @@
+global max is 100
+local count is 0
+tell {Max is } max
+tell {Count is } count
+count is now count + 1
+tell {Count is now } count
