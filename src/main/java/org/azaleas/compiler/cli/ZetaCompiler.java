@@ -17,12 +17,20 @@ import java.util.List;
 public class ZetaCompiler {
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.err.println("Usage: zetac <file.zeta>");
+            System.err.println("Usage: zetac <file.zeta> [input-file]");
             System.exit(1);
         }
-        
+
         String filePath = args[0];
         try {
+            // Optional second argument redirects standard input from a file, so
+            // `ask` statements read from it instead of the terminal. This lets
+            // hosts without an interactive console (e.g. the browser playground)
+            // supply input. With no second argument, stdin is left untouched.
+            if (args.length >= 2) {
+                System.setIn(Files.newInputStream(Path.of(args[1])));
+            }
+
             String source = Files.readString(Path.of(filePath));
 
             Preprocessor preprocessor = new Preprocessor();

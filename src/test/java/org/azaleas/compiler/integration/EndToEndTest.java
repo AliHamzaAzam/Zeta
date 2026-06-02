@@ -77,4 +77,29 @@ public class EndToEndTest {
         assertTrue(output.contains("Count is 0"), "Expected 'Count is 0'");
         assertTrue(output.contains("Count is now 1"), "Expected 'Count is now 1'");
     }
+
+    @Test
+    public void testSingleLineComment() {
+        String output = runProgram("< this is a comment >\ntell {hi}");
+        assertEquals("hi\n", output);
+    }
+
+    @Test
+    public void testBlockCommentOnOneLine() {
+        String output = runProgram("<< inline block comment >>\ntell {ok}");
+        assertEquals("ok\n", output);
+    }
+
+    @Test
+    public void testMultiLineComment() {
+        String source = "<< this comment\n   spans several\n   lines >>\ntell {after}";
+        String output = runProgram(source);
+        assertEquals("after\n", output);
+    }
+
+    @Test
+    public void testBlockCommentBetweenTokens() {
+        String output = runProgram("local x is 5 << note >>\ntell {} x");
+        assertEquals("5\n", output);
+    }
 }

@@ -56,8 +56,21 @@ public class LexerTest {
         ErrorHandler eh = new ErrorHandler();
         Lexer lexer = new Lexer(eh);
         List<Token> tokens = lexer.tokenize("2 ^ 3");
-        
+
         assertEquals(TokenType.EXPONENT, tokens.get(1).type());
         assertEquals("^", tokens.get(1).value());
+    }
+
+    @Test
+    public void testCommentsAreSkippedAndProduceNoTokens() {
+        ErrorHandler eh = new ErrorHandler();
+        Lexer lexer = new Lexer(eh);
+        List<Token> tokens = lexer.tokenize("<< multi\nline >> tell {x} < single >");
+
+        assertFalse(eh.hasErrors(), "Comments should not produce lexical errors");
+        assertEquals(TokenType.KEYWORD, tokens.get(0).type());
+        assertEquals("tell", tokens.get(0).value());
+        assertEquals(TokenType.STRING_OR_CHAR, tokens.get(1).type());
+        assertEquals(TokenType.EOF, tokens.get(2).type());
     }
 }

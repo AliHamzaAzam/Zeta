@@ -18,7 +18,7 @@ public class Lexer {
 
     static {
         PATTERNS.put(TokenType.WHITESPACE, "[ \\t\\n\\r\\f]+");
-        PATTERNS.put(TokenType.MULTI_LINE_COMMENT, "<<.*?>>");
+        PATTERNS.put(TokenType.MULTI_LINE_COMMENT, "(?s)<<.*?>>");
         PATTERNS.put(TokenType.SINGLE_LINE_COMMENT, "<[^>]*>");
         PATTERNS.put(TokenType.STRING_OR_CHAR, "\\{([^{}]*)\\}");
         PATTERNS.put(TokenType.KEYWORD, "(global|local|tell|ask|is|now|true|false)(?![a-z0-9])");
@@ -31,7 +31,9 @@ public class Lexer {
         PATTERNS.put(TokenType.RIGHT_PAREN, "\\)");
 
         TOKEN_PRIORITIES.put(TokenType.WHITESPACE, 0);
-        TOKEN_PRIORITIES.put(TokenType.MULTI_LINE_COMMENT, 1);
+        // Multi-line must outrank single-line: both can match at '<<', and the
+        // single-line pattern would otherwise stop at the first '>' inside a block.
+        TOKEN_PRIORITIES.put(TokenType.MULTI_LINE_COMMENT, 2);
         TOKEN_PRIORITIES.put(TokenType.SINGLE_LINE_COMMENT, 1);
         TOKEN_PRIORITIES.put(TokenType.STRING_OR_CHAR, 2);
         TOKEN_PRIORITIES.put(TokenType.KEYWORD, 3);
@@ -89,7 +91,15 @@ public class Lexer {
                 continue;
             }
 
-            if (bestMatch.type() == TokenType.WHITESPACE) {
+            TokenType matchedType = bestMatch.type();
+            boolean isTrivia = matchedType == TokenType.WHITESPACE
+                    || matchedType == TokenType.SINGLE_LINE_COMMENT
+                    || matchedType == TokenType.MULTI_LINE_COMMENT;
+
+            if (isTrivia) {
+                // Whitespace and comments are discarded and never enter the token
+                // stream. Walk their characters so line/column stay accurate even
+                // when a block comment spans multiple lines.
                 for (char c : bestMatch.value().toCharArray()) {
                     if (c == '\n') {
                         line++;
@@ -100,12 +110,10 @@ public class Lexer {
                 }
             } else {
                 tokens.add(bestMatch);
+                column += bestMatch.value().length();
             }
 
             position += bestMatch.value().length();
-            if (bestMatch.type() != TokenType.WHITESPACE) {
-                column += bestMatch.value().length();
-            }
         }
 
         tokens.add(new Token(TokenType.EOF, "", line, column));
