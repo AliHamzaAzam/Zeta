@@ -9,7 +9,7 @@ Zeta is a simple, readable programming language with English-like syntax. It is 
 - **String literals in curly braces**: Write text naturally with `{Hello, World!}`
 - **I/O with `tell` and `ask`**: Output values and read user input with readable keywords
 - **Type checking and constant guarding**: Strong type system with INT, DECIMAL, STRING, and BOOL types
-- **Comments**: Line comments with `--` for documentation
+- **Comments**: Single-line comments with `<comment>` and multi-line with `<<comment>>`
 - **Error reporting**: Clear syntax and semantic error messages with line and column information
 
 ## Prerequisites
@@ -54,10 +54,10 @@ java -jar target/Zeta-1.0-SNAPSHOT.jar hello.zeta
 ### Variables
 
 ```zeta
-global pi is 3.14          -- Constant, accessible everywhere
-local radius is 5          -- Constant in current scope
+global pi is 3.14          <Constant, accessible everywhere>
+local radius is 5          <Constant in current scope>
 local count is 0
-count is now count + 1     -- Mutate a local variable
+count is now count + 1     <Mutate a local variable>
 ```
 
 ### Types
@@ -80,15 +80,15 @@ Parentheses can be used to override precedence.
 ### I/O
 
 ```zeta
-tell {The answer is } 42   -- Output: The answer is 42
-ask name                   -- Read a line from stdin into 'name'
+tell {The answer is } 42   <Output: The answer is 42>
+ask name                   <Read a line from stdin into 'name'>
 ```
 
 ### Comments
 
 ```zeta
--- This is a line comment
-global x is 10             -- Comments can follow code
+<This is a line comment>
+global x is 10             <Comments can follow code>
 ```
 
 ## Examples
