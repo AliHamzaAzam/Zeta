@@ -22,7 +22,7 @@ Zeta source code is a sequence of Unicode characters that the lexer groups into 
 | Token | Regex Pattern | Description |
 |-------|---------------|-------------|
 | **Keywords** | `global`, `local`, `is`, `now`, `tell`, `ask`, `true`, `false` | Reserved words with special meaning |
-| **Identifier** | `[a-z][a-z0-9]*` | Variable names starting with a lowercase letter |
+| **Identifier** | `[a-zA-Z_][a-zA-Z0-9_]*` | Variable names of letters, digits and underscores, starting with a letter or underscore |
 | **Integer** | `[+-]?\d+` | Whole numbers, optionally signed |
 | **Decimal** | `[+-]?(\d+\.\d{1,5}|\.\d{1,5})([eE][+-]?\d+)?` | Floating-point numbers with up to 5 decimal places |
 | **String** | `\{[^{}]*\}` | Text enclosed in curly braces |
@@ -36,7 +36,7 @@ Zeta source code is a sequence of Unicode characters that the lexer groups into 
 
 ### Notes on Lexing
 
-- Keywords are matched with a negative lookahead `(?![a-z0-9])` to prevent partial matches (e.g., `globalx` is an identifier, not the keyword `global`)
+- Keywords are matched with a negative lookahead `(?![a-zA-Z0-9_])` to prevent partial matches (e.g., `globalx` and `is_now` are identifiers, not the keywords `global` / `is`)
 - The lexer uses priority-based matching: DECIMAL (priority 3) beats INTEGER (priority 2), so `3.14` is tokenized as a single decimal rather than integer `3` followed by `.14`
 - Signed numbers are handled at the lexer level: `-5` is a single INTEGER token, not an operator `-` followed by `5`
 - Strings in curly braces do not support escape sequences; the content between `{` and `}` is taken literally
@@ -62,7 +62,7 @@ power         ::= unary ("^" power)?
 unary         ::= ("+" | "-") unary | primary
 primary       ::= NUMBER | STRING | "true" | "false" | identifier | "(" expression ")"
 
-identifier    ::= [a-z][a-z0-9]*
+identifier    ::= [a-zA-Z_][a-zA-Z0-9_]*
 NUMBER        ::= INTEGER | DECIMAL
 INTEGER       ::= [+-]?\d+
 DECIMAL       ::= [+-]?(\d+\.\d{1,5}|\.\d{1,5})([eE][+-]?\d+)?

@@ -21,12 +21,12 @@ public class Lexer {
         PATTERNS.put(TokenType.MULTI_LINE_COMMENT, "(?s)<<.*?>>");
         PATTERNS.put(TokenType.SINGLE_LINE_COMMENT, "<[^>]*>");
         PATTERNS.put(TokenType.STRING_OR_CHAR, "\\{([^{}]*)\\}");
-        PATTERNS.put(TokenType.KEYWORD, "(global|local|tell|ask|is|now|true|false)(?![a-z0-9])");
+        PATTERNS.put(TokenType.KEYWORD, "(global|local|tell|ask|is|now|true|false)(?![a-zA-Z0-9_])");
         PATTERNS.put(TokenType.EXPONENT, "\\^");
         PATTERNS.put(TokenType.OPERATOR, "[+\\-*/%]");
         PATTERNS.put(TokenType.DECIMAL, "[+-]?(\\d+\\.\\d{1,5}|\\.\\d{1,5})([eE][+-]?\\d+)?");
         PATTERNS.put(TokenType.INTEGER, "[+-]?\\d+");
-        PATTERNS.put(TokenType.IDENTIFIER, "[a-z][a-z0-9]*");
+        PATTERNS.put(TokenType.IDENTIFIER, "[a-zA-Z_][a-zA-Z0-9_]*");
         PATTERNS.put(TokenType.LEFT_PAREN, "\\(");
         PATTERNS.put(TokenType.RIGHT_PAREN, "\\)");
 

@@ -73,4 +73,28 @@ public class LexerTest {
         assertEquals(TokenType.STRING_OR_CHAR, tokens.get(1).type());
         assertEquals(TokenType.EOF, tokens.get(2).type());
     }
+
+    @Test
+    public void testIdentifierWithUnderscoreAndUppercase() {
+        ErrorHandler eh = new ErrorHandler();
+        Lexer lexer = new Lexer(eh);
+        List<Token> tokens = lexer.tokenize("local user_Name2 is 5");
+
+        assertFalse(eh.hasErrors(), "Underscore/uppercase identifiers should be valid");
+        assertEquals(TokenType.IDENTIFIER, tokens.get(1).type());
+        assertEquals("user_Name2", tokens.get(1).value());
+    }
+
+    @Test
+    public void testKeywordPrefixWithUnderscoreIsIdentifier() {
+        ErrorHandler eh = new ErrorHandler();
+        Lexer lexer = new Lexer(eh);
+        List<Token> tokens = lexer.tokenize("local is_now is 1");
+
+        assertFalse(eh.hasErrors());
+        assertEquals(TokenType.IDENTIFIER, tokens.get(1).type());
+        assertEquals("is_now", tokens.get(1).value());
+        assertEquals(TokenType.KEYWORD, tokens.get(2).type());
+        assertEquals("is", tokens.get(2).value());
+    }
 }
